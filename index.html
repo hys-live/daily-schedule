@@ -22,26 +22,37 @@
     const sheetID = '1gCg_mssOJUWJ_7HF6SRppBPEm_JEUrGpIV3563JfWSU';
     const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json`;
 
-    fetch(url)
-      .then(res => res.text())
-      .then(text => {
-        // Google Sheets JSON is wrapped in a JS function call
-        const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1]);
-        const data = json.table;
-        const cols = data.cols.map(col => col.label);
-        const rows = data.rows.map(row => row.c.map(cell => cell?.v ?? ''));
-        // Build table head
-        document.querySelector('#sheetTable thead').innerHTML =
-          '<tr>' + cols.map(col => `<th>${col}</th>`).join('') + '</tr>';
-        // Build table body
-        document.querySelector('#sheetTable tbody').innerHTML =
-          rows.map(row =>
-            '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>'
-          ).join('');
-      })
-      .catch(err => {
-        document.getElementById('sheetTable').outerHTML = `<div class="alert alert-danger">Error loading data. Is your sheet public?</div>`;
-        console.error(err);
+function parseGoogleDate(val) {
+  const m = typeof val === 'string' && val.match(/^Date\(([\d,]+)\)$/);
+  if (m) {
+    const parts = m[1].split(',').map(Number);
+    const dateObj = new Date(...parts);
+    if (parts.length > 3) return dateObj.toLocaleString();
+    return dateObj.toLocaleDateString();
+  }
+  return val;
+}
+
+fetch(url)
+  .then(res => res.text())
+  .then(text => {
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1]);
+    const data = json.table;
+    const cols = data.cols.map(col => col.label);
+    const rows = data.rows.map(row =>
+      row.c.map(cell => cell?.f ?? parseGoogleDate(cell?.v) ?? '')
+    );
+    document.querySelector('#sheetTable thead').innerHTML =
+      '<tr>' + cols.map(col => `<th>${col}</th>`).join('') + '</tr>';
+    document.querySelector('#sheetTable tbody').innerHTML =
+      rows.map(row =>
+        '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>'
+      ).join('');
+  })
+  .catch(err => {
+    document.getElementById('sheetTable').outerHTML = `<div class="alert alert-danger">Error loading data. Is your sheet public?</div>`;
+    console.error(err);
+  });
       });
   </script>
 </body>
