@@ -13,6 +13,7 @@
     body { margin: 2em;}
     table tr th, table tr td { vertical-align: middle !important; text-align: center; }
     th .fa-solid, th .fa-regular, th .fa-light, th .fa-duotone { margin-right: 6px; }
+    /* Main Table Icons */
     .icon-date    { color: #1e88e5; }
     .icon-from    { color: #43a047; }
     .icon-to      { color: #fbc02d; }
@@ -24,12 +25,18 @@
     .icon-attend  { color: #c62828; }
     .icon-hall    { color: #f9a825; }
     .icon-cam     { color: #5e35b1; }
+    /* Other Table Icons */
+    .other-icon-date      { color: #1565c0; }
+    .other-icon-from      { color: #00bfae; }
+    .other-icon-to        { color: #ff9800; }
+    .other-icon-activity  { color: #8e24aa; }
+    .other-icon-volunteer { color: #e53935; }
   </style>
 </head>
 <body>
-  <h1>Google Sheet Data</h1>
+  <h1>Daily Schedule</h1>
   <div class="table-responsive">
-    <table class="table table-striped text-center" id="sheetTable">
+    <table class="table table-striped text-center" id="sheetTableMain">
       <thead>
         <tr>
           <th><i class="fa-solid fa-calendar-days icon-date"></i>Date</th>
@@ -43,6 +50,21 @@
           <th><i class="fa-solid fa-user-check icon-attend"></i>Attendance</th>
           <th><i class="fa-solid fa-users icon-hall"></i>Hall</th>
           <th><i class="fa-solid fa-video icon-cam"></i>Camera</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <h1>Additional Activities</h1>
+  <div class="table-responsive">
+    <table class="table table-striped text-center" id="sheetTableOther">
+      <thead>
+        <tr>
+          <th><i class="fa-solid fa-calendar-days other-icon-date"></i>Date</th>
+          <th><i class="fa-regular fa-clock other-icon-from"></i>From</th>
+          <th><i class="fa-regular fa-clock other-icon-to"></i>To</th>
+          <th><i class="fa-solid fa-person-running other-icon-activity"></i>Activity</th>
+          <th><i class="fa-solid fa-people-group other-icon-volunteer"></i>Volunteers</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -65,32 +87,65 @@
     }
 
     // Replace with your Google Sheet ID
-    const sheetID = '1gCg_mssOJUWJ_7HF6SRppBPEm_JEUrGpIV3563JfWSU';
-    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json`;
+    const sheetID = '1mZQvhgF4hZTl0nhqYuWsalVHkLM7lbBDWYqBkO0MKWM';
+    const urlMain = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=Main`;
+    const urlOther = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=Other`;
 
-    fetch(url)
-      .then(res => res.text())
-      .then(text => {
-        const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1]);
-        const data = json.table;
-        const rows = data.rows.map(row =>
-          row.c.map(cell => cell?.f ?? parseGoogleDate(cell?.v) ?? '')
-        );
-        document.querySelector('#sheetTable tbody').innerHTML =
-          rows.map(row =>
-            '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>'
-          ).join('');
-        // DataTable initialization
-        $('#sheetTable').DataTable({
-          paging: false,
-          info: false,
-          lengthChange: false
+    let dataTableMain = null;
+    let dataTableOther = null;
+
+    function loadSheetData(url, tableId, dataTableRef, skipFirstCol, customCols=[]) {
+      fetch(url)
+        .then(res => res.text())
+        .then(text => {
+          const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1]);
+          const data = json.table;
+          let rows = data.rows.map(row => row.c.map(cell => cell?.f ?? parseGoogleDate(cell?.v) ?? ''));
+          if (skipFirstCol) {
+            rows = rows.map(row => row.slice(1)); // remove first column (row ID)
+          }
+          if (customCols.length > 0) {
+            // If custom columns are specified (for "Other"), select only those columns
+            rows = rows.map(row => customCols.map(idx => row[idx]));
+          }
+          const tbody = document.querySelector(`#${tableId} tbody`);
+          tbody.innerHTML =
+            rows.map(row =>
+              '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>'
+            ).join('');
+          // DataTable initialization or update
+          if (!window[dataTableRef]) {
+            window[dataTableRef] = $(`#${tableId}`).DataTable({
+              paging: false,
+              info: false,
+              lengthChange: false,
+              destroy: true // allow re-initialization
+            });
+          } else {
+            window[dataTableRef].clear().draw();
+            rows.forEach(row => window[dataTableRef].row.add(row));
+            window[dataTableRef].draw();
+          }
+        })
+        .catch(err => {
+          document.getElementById(tableId).outerHTML = `<div class="alert alert-danger">Error loading data. Is your sheet public?</div>`;
+          console.error(err);
         });
-      })
-      .catch(err => {
-        document.getElementById('sheetTable').outerHTML = `<div class="alert alert-danger">Error loading data. Is your sheet public?</div>`;
-        console.error(err);
-      });
+    }
+
+    // For "Main", skip first column (row ID), display all others
+    loadSheetData(urlMain, 'sheetTableMain', 'dataTableMain', true);
+
+    // For "Other": skip first column, then display only columns 0:Date, 1:From, 2:To, 3:Activity, 4:Volunteers after skip
+    // That is, after slice(1), columns 0,1,2,3,4 are the ones we want
+    loadSheetData(urlOther, 'sheetTableOther', 'dataTableOther', true, [0,1,2,3,4]);
+
+    // Refresh every 60 seconds (60000 ms)
+    setInterval(() => {
+      loadSheetData(urlMain, 'sheetTableMain', 'dataTableMain', true);
+      loadSheetData(urlOther, 'sheetTableOther', 'dataTableOther', true, [0,1,2,3,4]);
+    }, 60000);
+
   </script>
 </body>
 </html>
