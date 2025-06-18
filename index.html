@@ -11,7 +11,10 @@
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
   <style>
     body { margin: 2em;}
+    h1 { text-align: center; }
+    .table-section { margin-bottom: 48px; }
     table tr th, table tr td { vertical-align: middle !important; text-align: center; }
+    th { text-align: center !important; }
     th .fa-solid, th .fa-regular, th .fa-light, th .fa-duotone { margin-right: 6px; }
     /* Main Table Icons */
     .icon-date    { color: #1e88e5; }
@@ -34,54 +37,81 @@
   </style>
 </head>
 <body>
-  <h1>Daily Schedule</h1>
-  <div class="table-responsive">
-    <table class="table table-striped text-center" id="sheetTableMain">
-      <thead>
-        <tr>
-          <th><i class="fa-solid fa-calendar-days icon-date"></i>Date</th>
-          <th><i class="fa-regular fa-clock icon-from"></i>From</th>
-          <th><i class="fa-regular fa-clock icon-to"></i>To</th>
-          <th><i class="fa-solid fa-sun icon-session"></i>Session</th>
-          <th><i class="fa-solid fa-book icon-content"></i>Content</th>
-          <th><i class="fa-solid fa-chalkboard-user icon-cond"></i>Conducting</th>
-          <th><i class="fa-solid fa-user-tie icon-sic"></i>SIC</th>
-          <th><i class="fa-solid fa-user-shield icon-hic"></i>HIC</th>
-          <th><i class="fa-solid fa-user-check icon-attend"></i>Attendance</th>
-          <th><i class="fa-solid fa-users icon-hall"></i>Hall</th>
-          <th><i class="fa-solid fa-video icon-cam"></i>Camera</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+  <div class="table-section">
+    <h1 class="text-center">Daily Schedule</h1>
+    <div class="table-responsive">
+      <table class="table table-striped text-center" id="sheetTableMain">
+        <thead>
+          <tr>
+            <th><i class="fa-solid fa-calendar-days icon-date"></i>Date</th>
+            <th><i class="fa-regular fa-clock icon-from"></i>From</th>
+            <th><i class="fa-regular fa-clock icon-to"></i>To</th>
+            <th><i class="fa-solid fa-sun icon-session"></i>Session</th>
+            <th><i class="fa-solid fa-book icon-content"></i>Content</th>
+            <th><i class="fa-solid fa-chalkboard-user icon-cond"></i>Conducting</th>
+            <th><i class="fa-solid fa-user-tie icon-sic"></i>SIC</th>
+            <th><i class="fa-solid fa-user-shield icon-hic"></i>HIC</th>
+            <th><i class="fa-solid fa-user-check icon-attend"></i>Attendance</th>
+            <th><i class="fa-solid fa-users icon-hall"></i>Hall</th>
+            <th><i class="fa-solid fa-video icon-cam"></i>Camera</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
-  <h1>Additional Activities</h1>
-  <div class="table-responsive">
-    <table class="table table-striped text-center" id="sheetTableOther">
-      <thead>
-        <tr>
-          <th><i class="fa-solid fa-calendar-days other-icon-date"></i>Date</th>
-          <th><i class="fa-regular fa-clock other-icon-from"></i>From</th>
-          <th><i class="fa-regular fa-clock other-icon-to"></i>To</th>
-          <th><i class="fa-solid fa-person-running other-icon-activity"></i>Activity</th>
-          <th><i class="fa-solid fa-people-group other-icon-volunteer"></i>Volunteers</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+  <div class="table-section">
+    <h1 class="text-center">Additional Activities</h1>
+    <div class="table-responsive">
+      <table class="table table-striped text-center" id="sheetTableOther">
+        <thead>
+          <tr>
+            <th><i class="fa-solid fa-calendar-days other-icon-date"></i>Date</th>
+            <th><i class="fa-regular fa-clock other-icon-from"></i>From</th>
+            <th><i class="fa-regular fa-clock other-icon-to"></i>To</th>
+            <th><i class="fa-solid fa-person-running other-icon-activity"></i>Activity</th>
+            <th><i class="fa-solid fa-people-group other-icon-volunteer"></i>Volunteers</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
   <!-- SCRIPTS -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
   <script>
-    function parseGoogleDate(val) {
-      const m = typeof val === 'string' && val.match(/^Date\(([\d,]+)\)$/);
-      if (m) {
-        const parts = m[1].split(',').map(Number);
-        const dateObj = new Date(...parts);
-        if (parts.length > 3) return dateObj.toLocaleString();
-        return dateObj.toLocaleDateString();
+    function formatDate(val) {
+      let dateObj;
+      if (typeof val === 'string') {
+        const m = val.match(/^Date\(([\d,]+)\)$/);
+        if (m) {
+          const parts = m[1].split(',').map(Number);
+          dateObj = new Date(...parts);
+        } else if (val.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+          const [month, day, year] = val.split('/').map(Number);
+          dateObj = new Date(year, month - 1, day);
+        } else {
+          return val;
+        }
+      } else if (val instanceof Date) {
+        dateObj = val;
+      } else {
+        return val;
+      }
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return `${dateObj.getDate()}-${months[dateObj.getMonth()]}`;
+    }
+
+    function formatTime(val) {
+      if (typeof val !== 'string') return val;
+      // Accepts "5:15:00 PM" or "5:15 PM"
+      const match = val.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+      if (match) {
+        let [, hour, min, ampm] = match;
+        return `${parseInt(hour)}:${min} ${ampm.toUpperCase()}`;
       }
       return val;
     }
@@ -100,14 +130,21 @@
         .then(text => {
           const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1]);
           const data = json.table;
-          let rows = data.rows.map(row => row.c.map(cell => cell?.f ?? parseGoogleDate(cell?.v) ?? ''));
+          let rows = data.rows.map(row => row.c.map(cell => cell?.f ?? cell?.v ?? ''));
           if (skipFirstCol) {
-            rows = rows.map(row => row.slice(1)); // remove first column (row ID)
+            rows = rows.map(row => row.slice(1));
           }
           if (customCols.length > 0) {
-            // If custom columns are specified (for "Other"), select only those columns
             rows = rows.map(row => customCols.map(idx => row[idx]));
           }
+          // Format Date and From/To columns
+          rows = rows.map(row => {
+            let newRow = [...row];
+            if (newRow[0]) newRow[0] = formatDate(newRow[0]);
+            if (newRow[1]) newRow[1] = formatTime(newRow[1]);
+            if (newRow[2]) newRow[2] = formatTime(newRow[2]);
+            return newRow;
+          });
           const tbody = document.querySelector(`#${tableId} tbody`);
           tbody.innerHTML =
             rows.map(row =>
@@ -137,7 +174,6 @@
     loadSheetData(urlMain, 'sheetTableMain', 'dataTableMain', true);
 
     // For "Other": skip first column, then display only columns 0:Date, 1:From, 2:To, 3:Activity, 4:Volunteers after skip
-    // That is, after slice(1), columns 0,1,2,3,4 are the ones we want
     loadSheetData(urlOther, 'sheetTableOther', 'dataTableOther', true, [0,1,2,3,4]);
 
     // Refresh every 60 seconds (60000 ms)
