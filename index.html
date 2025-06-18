@@ -20,6 +20,7 @@
     .icon-date    { color: #1e88e5; }
     .icon-from    { color: #43a047; }
     .icon-to      { color: #fbc02d; }
+    .icon-hallswitch { color: #00bcd4; }
     .icon-session { color: #ab47bc; }
     .icon-content { color: #6d4c41; }
     .icon-cond    { color: #e53935; }
@@ -46,6 +47,7 @@
             <th><i class="fa-solid fa-calendar-days icon-date"></i>Date</th>
             <th><i class="fa-regular fa-clock icon-from"></i>From</th>
             <th><i class="fa-regular fa-clock icon-to"></i>To</th>
+            <th><i class="fa-solid fa-right-left icon-hallswitch"></i>Hall Switch</th>
             <th><i class="fa-solid fa-sun icon-session"></i>Session</th>
             <th><i class="fa-solid fa-book icon-content"></i>Content</th>
             <th><i class="fa-solid fa-chalkboard-user icon-cond"></i>Conducting</th>
@@ -143,6 +145,7 @@
             if (newRow[0]) newRow[0] = formatDate(newRow[0]);
             if (newRow[1]) newRow[1] = formatTime(newRow[1]);
             if (newRow[2]) newRow[2] = formatTime(newRow[2]);
+            if (newRow[3]) newRow[3] = formatTime(newRow[3]);
             return newRow;
           });
           const tbody = document.querySelector(`#${tableId} tbody`);
