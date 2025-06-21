@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <!-- DataTables Bootstrap 5 CSS -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+  <!-- DataTables FixedColumns CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.bootstrap5.min.css">
   <style>
     body { margin: 2em;}
     h1 { text-align: center; }
@@ -83,6 +85,8 @@
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+  <!-- DataTables FixedColumns JS -->
+  <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
   <script>
     function formatDate(val) {
       let dateObj;
@@ -160,6 +164,10 @@
               info: false,
               lengthChange: false,
               destroy: true // allow re-initialization
+	      scrollX: true, // enable horizontal scroll for FixedColumns
+              fixedColumns: {
+                leftColumns: 2 // freeze first column
+              }
             });
           } else {
             window[dataTableRef].clear().draw();
