@@ -31,6 +31,7 @@
     .icon-attend  { color: #c62828; }
     .icon-hall    { color: #f9a825; }
     .icon-cam     { color: #5e35b1; }
+    .icon-av     { color: #3949ab; }
     /* Other Table Icons */
     .other-icon-date      { color: #1565c0; }
     .other-icon-from      { color: #00bfae; }
@@ -54,10 +55,10 @@
             <th><i class="fa-solid fa-book icon-content"></i>Content</th>
             <th><i class="fa-solid fa-chalkboard-user icon-cond"></i>Conducting</th>
             <th><i class="fa-solid fa-user-tie icon-sic"></i>SIC</th>
-            <th><i class="fa-solid fa-user-shield icon-hic"></i>HIC</th>
             <th><i class="fa-solid fa-user-check icon-attend"></i>Attendance</th>
             <th><i class="fa-solid fa-users icon-hall"></i>Hall</th>
             <th><i class="fa-solid fa-video icon-cam"></i>Camera</th>
+            <th><i class="fa-solid fa-music icon-av"></i>AV</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -176,7 +177,7 @@
           }
         })
         .catch(err => {
-          document.getElementById(tableId).outerHTML = `<div class="alert alert-danger">Error loading data. Is your sheet public?</div>`;
+          document.getElementById(tableId).outerHTML = `<div class="alert alert-danger">Error loading data</div>`;
           console.error(err);
         });
     }
